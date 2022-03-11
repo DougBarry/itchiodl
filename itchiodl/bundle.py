@@ -7,8 +7,8 @@ class Bundle:
         self.login = login
         self.url = url
 
-    def load_games(self):
-        i = 1
+    def load_games(self, page_start = 1):
+        i = page_start
 
         r = self.login.get(self.url)
         s = soup(r.text, "html.parser")
@@ -36,7 +36,21 @@ class Bundle:
                     "game_id": game_id,
                     "csrf_token": csrf_token}
 
-                r = self.login.post(f"{self.url}?page={i}", data=data)
+                retry_counter = 0
+
+                while 1:
+                    if retry_counter >= 5:
+                        print(f"Skipping game_id: {name}")
+                        break
+                    try:
+                        retry_counter += 1
+                        r = self.login.post(f"{self.url}?page={i}", data=data)
+                        break
+                        # return True
+                    except Exception as e:
+                        print(f"Retrying ({retry_counter}) game_id: {name}")
+                        continue
+
                 return False
             # else:
             #    print(f"Skipping {name} - Already in Library")
